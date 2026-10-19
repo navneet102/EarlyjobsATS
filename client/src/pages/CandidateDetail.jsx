@@ -135,6 +135,12 @@ export default function CandidateDetail() {
               <span className="detail-label">Current stage</span>
               <StageBadge stage={candidate.stage} />
             </div>
+            {candidate.referredBy && (
+              <div>
+                <span className="detail-label">Referred by</span>
+                <span>{candidate.referredBy}</span>
+              </div>
+            )}
           </div>
 
           {candidate.skills.length > 0 && (

@@ -34,6 +34,11 @@ function clean(body) {
       .filter(Boolean);
   }
 
+  // a referrer only means something when the source is a referral
+  if (data.source && data.source !== 'Referral') {
+    data.referredBy = '';
+  }
+
   return data;
 }
 

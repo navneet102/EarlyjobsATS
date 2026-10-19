@@ -32,6 +32,7 @@ const candidateSchema = new mongoose.Schema(
     experience: { type: Number, default: 0, min: 0 },
     skills: { type: [String], default: [] },
     resumeUrl: { type: String, default: '' },
+    referredBy: { type: String, default: '', trim: true },
     notes: { type: [noteSchema], default: [] },
     stageHistory: { type: [historySchema], default: [] },
   },

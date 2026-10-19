@@ -12,6 +12,7 @@ export default function CandidateForm({ initial, onSubmit, submitLabel = 'Save',
     experience: initial?.experience ?? 0,
     skills: (initial?.skills || []).join(', '),
     resumeUrl: initial?.resumeUrl || '',
+    referredBy: initial?.referredBy || '',
   });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -38,6 +39,7 @@ export default function CandidateForm({ initial, onSubmit, submitLabel = 'Save',
           .map((s) => s.trim())
           .filter(Boolean),
         resumeUrl: form.resumeUrl.trim(),
+        referredBy: form.source === 'Referral' ? form.referredBy.trim() : '',
       });
     } catch (err) {
       setError(err.message);
@@ -74,7 +76,16 @@ export default function CandidateForm({ initial, onSubmit, submitLabel = 'Save',
       <div className="form-row">
         <label>
           Source
-          <select value={form.source} onChange={change('source')}>
+          <select
+            value={form.source}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                source: e.target.value,
+                referredBy: e.target.value === 'Referral' ? form.referredBy : '',
+              })
+            }
+          >
             {SOURCES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -87,6 +98,18 @@ export default function CandidateForm({ initial, onSubmit, submitLabel = 'Save',
           <input type="number" min="0" step="0.5" value={form.experience} onChange={change('experience')} />
         </label>
       </div>
+
+      {form.source === 'Referral' && (
+        <label>
+          Referred by
+          <input
+            value={form.referredBy}
+            onChange={change('referredBy')}
+            placeholder="Who put them forward?"
+          />
+          <span className="hint">Tracked so you can see which referrers actually convert</span>
+        </label>
+      )}
 
       <label>
         Skills

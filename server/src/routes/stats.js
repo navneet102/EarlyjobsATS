@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
       Candidate.countDocuments(),
       Candidate.countDocuments({ createdAt: { $gte: weekAgo } }),
       Candidate.find().sort({ createdAt: -1 }).limit(5).select('name position stage createdAt'),
-      Candidate.find().select('stage stageHistory createdAt').lean(),
+      Candidate.find().select('stage stageHistory createdAt referredBy').lean(),
     ]);
 
     const byStage = {};
@@ -108,6 +108,17 @@ router.get('/', async (req, res) => {
       .filter((row) => row.avgDays > 0)
       .sort((a, b) => b.avgDays - a.avgDays)[0];
 
+    // Referred candidates are the only ones with a name attached, so this is
+    // the one source we can break down further than a plain count.
+    const referrers = {};
+    all.forEach((candidate) => {
+      if (!candidate.referredBy) return;
+      const row = referrers[candidate.referredBy] || { name: candidate.referredBy, total: 0, hired: 0 };
+      row.total += 1;
+      if (candidate.stage === 'Hired') row.hired += 1;
+      referrers[candidate.referredBy] = row;
+    });
+
     const sourceQuality = sources
       .map((row) => ({
         source: row._id,
@@ -128,6 +139,7 @@ router.get('/', async (req, res) => {
       conversion,
       bottleneck: bottleneck || null,
       sourceQuality,
+      referrers: Object.values(referrers).sort((a, b) => b.hired - a.hired || b.total - a.total),
       recent,
     });
   } catch (err) {

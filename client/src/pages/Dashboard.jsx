@@ -49,6 +49,7 @@ export default function Dashboard() {
         </div>
       )}
 
+
       <div className="two-col">
         <section className="card">
           <h2>Pipeline by stage</h2>
@@ -99,33 +100,59 @@ export default function Dashboard() {
         ))}
         <p className="muted small">
           Days per stage, averaged over completed stays. Rejected and Hired have no average because
-          nothing follows them.
+          nothing follows them. Leaving a stage and coming back counts as two stays.
         </p>
       </section>
 
-      <section className="card">
-        <h2>Which sources actually hire</h2>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Source</th>
-              <th>Candidates</th>
-              <th>Hired</th>
-              <th>Hire rate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.sourceQuality.map((row) => (
-              <tr key={row.source}>
-                <td data-label="Source">{row.source}</td>
-                <td data-label="Candidates">{row.total}</td>
-                <td data-label="Hired">{row.hired}</td>
-                <td data-label="Hire rate">{row.hireRate}%</td>
+      <div className={stats.referrers.length ? 'two-col' : ''}>
+        <section className="card">
+          <h2>Which sources actually hire</h2>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Candidates</th>
+                <th>Hired</th>
+                <th>Rate</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {stats.sourceQuality.map((row) => (
+                <tr key={row.source}>
+                  <td data-label="Source">{row.source}</td>
+                  <td data-label="Candidates">{row.total}</td>
+                  <td data-label="Hired">{row.hired}</td>
+                  <td data-label="Rate">{row.hireRate}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        {stats.referrers.length > 0 && (
+          <section className="card">
+            <h2>Who refers the hires</h2>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Referrer</th>
+                  <th>Sent</th>
+                  <th>Hired</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.referrers.map((row) => (
+                  <tr key={row.name}>
+                    <td data-label="Referrer">{row.name}</td>
+                    <td data-label="Sent">{row.total}</td>
+                    <td data-label="Hired">{row.hired}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+      </div>
 
       <section className="card">
         <h2>Recently added</h2>
