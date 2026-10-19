@@ -629,6 +629,12 @@ label textarea {
   color: var(--muted);
 }
 
+.timeline .move {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ---------- board ---------- */
 
 .board {

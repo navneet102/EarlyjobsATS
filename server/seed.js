@@ -63,10 +63,15 @@ function historyFor(stage, applied, seed, windowDays) {
   const scale = spread > room && spread > 0 ? room / spread : 1;
 
   let at = new Date(applied);
+  let previous = '';
+
   return path.map((entry, i) => {
     if (i > 0) at = new Date(at.getTime() + gaps[i - 1] * scale * DAY);
-    const step = { stage: entry, at };
+
+    const step = { stage: entry, from: previous, at };
     if (entry === 'Rejected') step.note = 'Did not clear the screening round';
+
+    previous = entry;
     return step;
   });
 }

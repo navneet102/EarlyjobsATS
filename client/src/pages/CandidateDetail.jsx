@@ -201,7 +201,15 @@ export default function CandidateDetail() {
         <ol className="timeline">
           {history.map((h, i) => (
             <li key={i}>
-              <StageBadge stage={h.stage} />
+              {h.from ? (
+                <span className="move">
+                  <StageBadge stage={h.from} />
+                  <span className="muted">→</span>
+                  <StageBadge stage={h.stage} />
+                </span>
+              ) : (
+                <StageBadge stage={h.stage} />
+              )}
               <span className="muted small">{formatDate(h.at)}</span>
               {h.note && <p className="small">{h.note}</p>}
             </li>

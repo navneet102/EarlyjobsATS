@@ -98,6 +98,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Name, email and position are required' });
     }
 
+    const duplicate = await Candidate.findOne({ email: email.toLowerCase().trim() }).select('name');
+    if (duplicate) {
+      return res.status(409).json({ message: `Already on file as "${duplicate.name}" for this email address` });
+    }
+
     const candidate = await Candidate.create(clean(req.body));
     res.status(201).json(candidate);
   } catch (err) {
@@ -107,7 +112,10 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try {
-    const candidate = await Candidate.findByIdAndUpdate(req.params.id, clean(req.body), {
+    const changes = clean(req.body);
+    delete changes.stage; // stage moves go through /stage so they land in the history
+
+    const candidate = await Candidate.findByIdAndUpdate(req.params.id, changes, {
       new: true,
       runValidators: true,
     });
@@ -130,8 +138,8 @@ router.patch('/:id/stage', async (req, res) => {
     const candidate = await Candidate.findById(req.params.id);
     if (!candidate) return res.status(404).json({ message: 'Candidate not found' });
 
+    candidate.stageHistory.push({ from: candidate.stage, stage, note });
     candidate.stage = stage;
-    candidate.stageHistory.push({ stage, note });
     await candidate.save();
 
     res.json(candidate);

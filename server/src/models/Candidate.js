@@ -14,6 +14,7 @@ const noteSchema = new mongoose.Schema(
 const historySchema = new mongoose.Schema(
   {
     stage: { type: String, enum: STAGES },
+    from: { type: String, default: '' },
     at: { type: Date, default: Date.now },
     note: { type: String, default: '' },
   },
