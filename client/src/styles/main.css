@@ -343,6 +343,22 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
+/* conversion rows carry a "Stage → Stage" label, so they need more room */
+.funnel-row .bar-label {
+  flex: 0 0 124px;
+  width: 124px;
+  font-size: 12px;
+}
+
+.callout {
+  background: #fff8e7;
+  border: 1px solid #f0d9a0;
+  border-left: 4px solid var(--offer);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+
 /* ---------- simple lists ---------- */
 
 .plain-list {

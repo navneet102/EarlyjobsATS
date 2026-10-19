@@ -36,17 +36,39 @@ const people = [
 
 const FLOW = ['Applied', 'Screening', 'Interview', 'Offer', 'Hired'];
 
-function historyFor(stage, applied) {
-  if (stage === 'Rejected') {
-    return [
-      { stage: 'Applied', at: applied },
-      { stage: 'Screening', at: new Date(applied.getTime() + 2 * DAY) },
-      { stage: 'Rejected', at: new Date(applied.getTime() + 6 * DAY), note: 'Did not clear the screening round' },
-    ];
-  }
+// Roughly how long candidates sit before moving on. Interview and Offer take
+// the longest in practice because scheduling and negotiating drag on.
+const GAPS = {
+  Screening: [1, 3],
+  Interview: [3, 7],
+  Offer: [6, 14],
+  Hired: [3, 10],
+  Rejected: [2, 10],
+};
 
-  const upto = FLOW.slice(0, FLOW.indexOf(stage) + 1);
-  return upto.map((s, i) => ({ stage: s, at: new Date(applied.getTime() + i * 3 * DAY) }));
+function gapFor(stage, seed) {
+  const [min, max] = GAPS[stage];
+  return min + ((seed * 37 + stage.length * 11) % (max - min + 1));
+}
+
+function historyFor(stage, applied, seed, windowDays) {
+  const path =
+    stage === 'Rejected' ? ['Applied', 'Screening', 'Rejected'] : FLOW.slice(0, FLOW.indexOf(stage) + 1);
+
+  const gaps = path.slice(1).map((s) => gapFor(s, seed));
+  const spread = gaps.reduce((sum, d) => sum + d, 0);
+
+  // squeeze the gaps if they would push the last event past today
+  const room = Math.max(windowDays - 1, 0);
+  const scale = spread > room && spread > 0 ? room / spread : 1;
+
+  let at = new Date(applied);
+  return path.map((entry, i) => {
+    if (i > 0) at = new Date(at.getTime() + gaps[i - 1] * scale * DAY);
+    const step = { stage: entry, at };
+    if (entry === 'Rejected') step.note = 'Did not clear the screening round';
+    return step;
+  });
 }
 
 function emailFor(name) {
@@ -75,7 +97,7 @@ async function run() {
       skills: p.skills,
       resumeUrl: '',
       notes: [],
-      stageHistory: historyFor(p.stage, applied),
+      stageHistory: historyFor(p.stage, applied, i + 1, p.days),
       createdAt: applied,
       updatedAt: applied,
     };

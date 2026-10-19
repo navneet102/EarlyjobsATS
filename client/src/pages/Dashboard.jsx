@@ -19,8 +19,8 @@ export default function Dashboard() {
   if (!stats) return <p className="muted">Loading dashboard…</p>;
 
   const stages = Object.entries(stats.byStage);
-  const highest = Math.max(...stages.map(([, count]) => count), 1);
-  const sourceTotal = stats.bySource.reduce((sum, s) => sum + s.count, 0);
+  const busiest = Math.max(...stages.map(([, count]) => count), 1);
+  const slowest = Math.max(...stats.timeInStage.map((row) => row.avgDays || 0), 1);
 
   return (
     <div>
@@ -39,6 +39,16 @@ export default function Dashboard() {
         <StatCard label="Avg. days to hire" value={stats.avgDaysToHire} />
       </div>
 
+      {stats.bottleneck && (
+        <div className="callout">
+          <strong>Slowest stage:</strong> candidates take an average of {stats.bottleneck.avgDays} days to
+          clear {stats.bottleneck.stage}
+          {stats.bottleneck.waiting > 0 &&
+            `, and ${stats.bottleneck.waiting} ${stats.bottleneck.waiting === 1 ? 'is' : 'are'} waiting there now`}
+          .
+        </div>
+      )}
+
       <div className="two-col">
         <section className="card">
           <h2>Pipeline by stage</h2>
@@ -48,7 +58,7 @@ export default function Dashboard() {
               <div className="bar-track">
                 <div
                   className={`bar bar-${stage.toLowerCase()}`}
-                  style={{ width: `${(count / highest) * 100}%` }}
+                  style={{ width: `${(count / busiest) * 100}%` }}
                 />
               </div>
               <span className="bar-count">{count}</span>
@@ -57,19 +67,65 @@ export default function Dashboard() {
         </section>
 
         <section className="card">
-          <h2>Where they came from</h2>
-          {sourceTotal === 0 && <p className="muted">No candidates yet.</p>}
-          {stats.bySource.map((row) => (
-            <div className="bar-row" key={row.source}>
-              <span className="bar-label">{row.source}</span>
+          <h2>Stage conversion</h2>
+          {stats.conversion.map((step) => (
+            <div className="bar-row funnel-row" key={step.to}>
+              <span className="bar-label">
+                {step.from} → {step.to}
+              </span>
               <div className="bar-track">
-                <div className="bar bar-neutral" style={{ width: `${(row.count / sourceTotal) * 100}%` }} />
+                <div className="bar bar-neutral" style={{ width: `${step.rate}%` }} />
               </div>
-              <span className="bar-count">{row.count}</span>
+              <span className="bar-count">{step.rate}%</span>
             </div>
           ))}
+          <p className="muted small">Of everyone who reached a stage, how many moved to the next one.</p>
         </section>
       </div>
+
+      <section className="card">
+        <h2>Average time in each stage</h2>
+        {stats.timeInStage.map((row) => (
+          <div className="bar-row" key={row.stage}>
+            <span className="bar-label">{row.stage}</span>
+            <div className="bar-track">
+              <div
+                className={`bar bar-${row.stage.toLowerCase()}`}
+                style={{ width: `${((row.avgDays || 0) / slowest) * 100}%` }}
+              />
+            </div>
+            <span className="bar-count">{row.avgDays === null ? '—' : row.avgDays}</span>
+          </div>
+        ))}
+        <p className="muted small">
+          Days per stage, averaged over completed stays. Rejected and Hired have no average because
+          nothing follows them.
+        </p>
+      </section>
+
+      <section className="card">
+        <h2>Which sources actually hire</h2>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Candidates</th>
+              <th>Hired</th>
+              <th>Hire rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.sourceQuality.map((row) => (
+              <tr key={row.source}>
+                <td data-label="Source">{row.source}</td>
+                <td data-label="Candidates">{row.total}</td>
+                <td data-label="Hired">{row.hired}</td>
+                <td data-label="Hire rate">{row.hireRate}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
       <section className="card">
         <h2>Recently added</h2>
