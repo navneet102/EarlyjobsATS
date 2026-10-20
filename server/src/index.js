@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const connect = require('./db');
@@ -13,6 +15,17 @@ app.use('/api/candidates', require('./routes/candidates'));
 app.use('/api/stats', require('./routes/stats'));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+app.use('/api', (req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+const clientDist = path.join(__dirname, '../../client/dist');
+
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get('*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+}
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
